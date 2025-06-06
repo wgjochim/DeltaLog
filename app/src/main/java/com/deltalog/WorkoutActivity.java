@@ -5,6 +5,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -46,7 +47,8 @@ public class WorkoutActivity extends AppCompatActivity {
 
 
 
-    // Add Exercise Dialog 49-147
+    // Add Exercise Dialog 49-279
+
     private void showAddExerciseDialog() {
         LayoutInflater inflater = LayoutInflater.from(this);
         View dialogView = inflater.inflate(R.layout.dialog_add_exercise, null);
@@ -114,9 +116,139 @@ public class WorkoutActivity extends AppCompatActivity {
             int sets = selectedSets[0];
 
             if (!exerciseName.isEmpty()) {
-                Toast.makeText(this, "Exercise: " + exerciseName + " | Sets: " + sets, Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
-                // Add database/save logic here
+
+                // Container to insert into
+                LinearLayout container = findViewById(R.id.exerciseCardContainer);
+
+                // Card layout
+                LinearLayout card = new LinearLayout(this);
+                card.setOrientation(LinearLayout.VERTICAL);
+                card.setBackground(ContextCompat.getDrawable(this, R.drawable.card_background));
+                card.setPadding(48, 48, 48, 48); // Your updated padding
+                LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                cardParams.setMargins(0, 24, 0, 0);
+                card.setLayoutParams(cardParams);
+
+                // Exercise title
+                TextView nameText = new TextView(this);
+                nameText.setText(exerciseName);
+                nameText.setTextColor(ContextCompat.getColor(this, R.color.white));
+                nameText.setTextSize(18);
+                nameText.setTypeface(null, Typeface.BOLD);
+                card.addView(nameText);
+
+                // Container for set rows
+                LinearLayout setsContainer = new LinearLayout(this);
+                setsContainer.setOrientation(LinearLayout.VERTICAL);
+                setsContainer.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                ));
+                card.addView(setsContainer);
+
+                // Remove Row
+                View.OnClickListener removeRowListener = view -> {
+                    View row = (View) view.getParent();
+                    setsContainer.removeView(row);
+                };
+
+                Runnable addSetRow = () -> {
+                    LinearLayout row = new LinearLayout(this);
+                    row.setOrientation(LinearLayout.HORIZONTAL);
+                    row.setGravity(Gravity.CENTER_VERTICAL);
+                    row.setPadding(0, 16, 0, 0);
+
+                    TextView setLabel = new TextView(this);
+                    setLabel.setText("Set " + (setsContainer.getChildCount() + 1) + ": ");
+                    setLabel.setTextColor(ContextCompat.getColor(this, R.color.white));
+                    setLabel.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                    EditText weightInput = new EditText(this);
+                    weightInput.setHint("Weight");
+                    weightInput.setTextSize(13);
+                    weightInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    weightInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
+                    weightInput.setTextColor(ContextCompat.getColor(this, R.color.white));
+                    weightInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+                    weightInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                    EditText repsInput = new EditText(this);
+                    repsInput.setHint("Reps");
+                    repsInput.setTextSize(13);
+                    repsInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    repsInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
+                    repsInput.setTextColor(ContextCompat.getColor(this, R.color.white));
+                    repsInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+                    repsInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                    TextView removeBtn = new TextView(this);
+                    removeBtn.setText("✕");
+                    removeBtn.setTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+                    removeBtn.setTextSize(18);
+                    removeBtn.setPadding(16, 0, 0, 0);
+
+                    // OnClick logic with confirmation if edited
+                    removeBtn.setOnClickListener(view -> {
+                        String weightText = weightInput.getText().toString().trim();
+                        String repsText = repsInput.getText().toString().trim();
+
+                        boolean isEdited = !weightText.isEmpty() || !repsText.isEmpty();
+
+                        Runnable removeAndUpdateLabels = () -> {
+                            setsContainer.removeView(row);
+
+                            // Update set labels
+                            for (int i = 0; i < setsContainer.getChildCount(); i++) {
+                                LinearLayout setRow = (LinearLayout) setsContainer.getChildAt(i);
+                                TextView label = (TextView) setRow.getChildAt(0); // Assumes label is the first child
+                                label.setText("Set " + (i + 1) + ": ");
+                            }
+                        };
+
+                        if (isEdited) {
+                            new AlertDialog.Builder(this)
+                                    .setTitle("Delete Set")
+                                    .setMessage("Are you sure you want to delete the set?")
+                                    .setPositiveButton("Delete", (dialogInterface, which) -> removeAndUpdateLabels.run())
+                                    .setNegativeButton("Cancel", null)
+                                    .show();
+                        } else {
+                            removeAndUpdateLabels.run();
+                        }
+                    });
+
+
+                    row.addView(setLabel);
+                    row.addView(weightInput);
+                    row.addView(repsInput);
+                    row.addView(removeBtn);
+
+                    setsContainer.addView(row);
+                };
+
+                // Create the initial number of set rows
+                for (int i = 0; i < sets; i++) {
+                    addSetRow.run();
+                }
+
+                // Add "+" button
+                TextView addRowButton = new TextView(this);
+                addRowButton.setText("+ Add Set");
+                addRowButton.setTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+                addRowButton.setTextSize(14);
+                addRowButton.setPadding(0, 24, 0, 0);
+                addRowButton.setOnClickListener(view -> addSetRow.run());
+
+                card.addView(addRowButton);
+
+                // Add to container
+                container.addView(card);
+
+
             } else {
                 Toast.makeText(this, "Exercise name cannot be empty", Toast.LENGTH_SHORT).show();
             }
@@ -144,8 +276,6 @@ public class WorkoutActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // Add Exercise Dialog 49-147
-
-
+    // Add Exercise 49-279
 
 }
