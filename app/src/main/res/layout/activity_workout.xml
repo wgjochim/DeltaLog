@@ -14,6 +14,48 @@
         android:orientation="vertical"
         android:layout_marginTop="12dp">
 
+        <!-- Top row with back arrow, text, and time icon -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp">
+
+            <!-- Back Arrow -->
+            <ImageView
+                android:id="@+id/back_arrow"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_back_arrow"
+                android:contentDescription="Back"
+                android:layout_gravity="center_vertical" />
+
+            <!-- Spacer to push the right elements to the end -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Time text -->
+            <TextView
+                android:id="@+id/timeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textSize="24sp"
+                android:textColor="@color/white"
+                android:layout_marginEnd="8dp"
+                android:textStyle="bold"/>
+
+            <!-- Time Icon -->
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_time"
+                android:contentDescription="Time Icon" />
+        </LinearLayout>
+
         <!-- Container for added exercise cards -->
         <LinearLayout
             android:id="@+id/exerciseCardContainer"

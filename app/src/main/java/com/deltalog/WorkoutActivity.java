@@ -1,5 +1,6 @@
 package com.deltalog;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,6 +22,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class WorkoutActivity extends AppCompatActivity {
 
@@ -43,11 +49,18 @@ public class WorkoutActivity extends AppCompatActivity {
 
         TextView addExerciseText = findViewById(R.id.addExerciseText);
         addExerciseText.setOnClickListener(v -> showAddExerciseDialog());
+
+        ImageView backArrow = findViewById(R.id.back_arrow);
+        backArrow.setOnClickListener(v -> showDiscardWorkoutDialog());
+
+        TextView timeText = findViewById(R.id.timeText);
+        String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+        timeText.setText(currentTime);
     }
 
 
 
-    // Add Exercise Dialog 49-279
+    // Add Exercise Dialog
 
     private void showAddExerciseDialog() {
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -150,12 +163,6 @@ public class WorkoutActivity extends AppCompatActivity {
                 ));
                 card.addView(setsContainer);
 
-                // Remove Row
-                View.OnClickListener removeRowListener = view -> {
-                    View row = (View) view.getParent();
-                    setsContainer.removeView(row);
-                };
-
                 Runnable addSetRow = () -> {
                     LinearLayout row = new LinearLayout(this);
                     row.setOrientation(LinearLayout.HORIZONTAL);
@@ -195,13 +202,11 @@ public class WorkoutActivity extends AppCompatActivity {
                     removeBtn.setOnClickListener(view -> {
                         String weightText = weightInput.getText().toString().trim();
                         String repsText = repsInput.getText().toString().trim();
-
                         boolean isEdited = !weightText.isEmpty() || !repsText.isEmpty();
 
-                        Runnable removeAndUpdateLabels = () -> {
-                            setsContainer.removeView(row);
+                        int remainingSets = setsContainer.getChildCount();
 
-                            // Update set labels
+                        Runnable updateSetLabels = () -> {
                             for (int i = 0; i < setsContainer.getChildCount(); i++) {
                                 LinearLayout setRow = (LinearLayout) setsContainer.getChildAt(i);
                                 TextView label = (TextView) setRow.getChildAt(0); // Assumes label is the first child
@@ -209,15 +214,35 @@ public class WorkoutActivity extends AppCompatActivity {
                             }
                         };
 
-                        if (isEdited) {
+                        if (remainingSets == 1) {
+                            // If only one set remains, prompt to delete entire exercise
                             new AlertDialog.Builder(this)
-                                    .setTitle("Delete Set")
-                                    .setMessage("Are you sure you want to delete the set?")
-                                    .setPositiveButton("Delete", (dialogInterface, which) -> removeAndUpdateLabels.run())
+                                    .setTitle("Delete Exercise")
+                                    .setMessage("This is the last set. Do you want to delete the entire exercise?")
+                                    .setPositiveButton("Delete", (dialogInterface, which) -> {
+                                        // Remove the whole exercise card
+                                        LinearLayout exerciseCardContainer = findViewById(R.id.exerciseCardContainer);
+                                        View exerciseCard = (View) setsContainer.getParent(); // Card is parent of setsContainer
+                                        exerciseCardContainer.removeView(exerciseCard);
+                                    })
                                     .setNegativeButton("Cancel", null)
                                     .show();
                         } else {
-                            removeAndUpdateLabels.run();
+                            Runnable removeAndUpdate = () -> {
+                                setsContainer.removeView(row);
+                                updateSetLabels.run();
+                            };
+
+                            if (isEdited) {
+                                new AlertDialog.Builder(this)
+                                        .setTitle("Delete Set")
+                                        .setMessage("Are you sure you want to delete the set?")
+                                        .setPositiveButton("Delete", (dialogInterface, which) -> removeAndUpdate.run())
+                                        .setNegativeButton("Cancel", null)
+                                        .show();
+                            } else {
+                                removeAndUpdate.run();
+                            }
                         }
                     });
 
@@ -276,6 +301,20 @@ public class WorkoutActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // Add Exercise 49-279
+    // End of Add Exercise
+
+
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        showDiscardWorkoutDialog();}
+    private void showDiscardWorkoutDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Discard Workout?")
+                .setMessage("Are you sure you want to discard your workout?")
+                .setPositiveButton("Yes", (dialog, which) -> finish())
+                .setNegativeButton("No", null)
+                .show();
+    }
 
 }
