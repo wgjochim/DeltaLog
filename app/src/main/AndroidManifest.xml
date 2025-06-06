@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DeltaLog"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait"
@@ -23,6 +24,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".WorkoutActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+        </activity>
+
     </application>
 
 </manifest>

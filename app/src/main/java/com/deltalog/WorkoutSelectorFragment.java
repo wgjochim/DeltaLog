@@ -1,6 +1,7 @@
 package com.deltalog;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -40,7 +41,8 @@ public class WorkoutSelectorFragment extends Fragment {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 String workoutName = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WORKOUT_NAME));
-                View card = createWorkoutCard(workoutName);
+                int workoutTypeId = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_WORKOUT_TYPE_ID));
+                View card = createWorkoutCard(workoutName, workoutTypeId);
                 workoutListContainer.addView(card);
             } while (cursor.moveToNext());
             cursor.close();
@@ -67,7 +69,7 @@ public class WorkoutSelectorFragment extends Fragment {
                     if (!workoutName.isEmpty()) {
                         long newId = dbHelper.insertWorkoutType(workoutName);
                         if (newId != -1) {
-                            View card = createWorkoutCard(workoutName);
+                            View card = createWorkoutCard(workoutName, (int) newId);
                             workoutListContainer.addView(card);
 
                             Toast.makeText(getContext(), "Workout \"" + workoutName + "\" created!", Toast.LENGTH_SHORT).show();
@@ -91,7 +93,7 @@ public class WorkoutSelectorFragment extends Fragment {
 
 
     // Creates Card with workout names in them. Is called in OnCreate with all saved names
-    private View createWorkoutCard(String workoutName) {
+    private View createWorkoutCard(String workoutName, int workoutTypeId) {
         CardView card = new CardView(requireContext());
         card.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -109,6 +111,13 @@ public class WorkoutSelectorFragment extends Fragment {
         nameText.setTextColor(getResources().getColor(R.color.white, null));
 
         card.addView(nameText);
+
+        card.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), WorkoutActivity.class);
+            intent.putExtra(WorkoutActivity.WORKOUT_TYPE, workoutTypeId);
+            startActivity(intent);
+        });
+
         return card;
     }
 }
