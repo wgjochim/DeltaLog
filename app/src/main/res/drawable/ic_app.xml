@@ -1,0 +1,10 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:gravity="center"
+        android:bottom="250dp"
+        android:top="250dp"
+        android:left="250dp"
+        android:right="250dp"
+        android:drawable="@drawable/ic_dumbbell" />
+</layer-list>
+

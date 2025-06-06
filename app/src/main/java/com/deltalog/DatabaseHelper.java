@@ -1,6 +1,8 @@
 package com.deltalog;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -11,39 +13,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
 
     // Table Names
-    private static final String TABLE_WORKOUT_TYPES = "workout_types";
-    private static final String TABLE_WORKOUTS = "workouts";
-    private static final String TABLE_EXERCISES = "exercises";
-    private static final String TABLE_WORKOUT_EXERCISES = "workout_exercises";
-    private static final String TABLE_SETS = "sets";
+    public static final String TABLE_WORKOUT_TYPES = "WorkoutTypes";
+    public static final String TABLE_WORKOUT_SESSIONS = "WorkoutSessions";
+    public static final String TABLE_EXERCISES = "Exercises";
+    public static final String TABLE_EXERCISE_SETS = "ExerciseSets";
 
-    // Columns for workout_types
-    private static final String COLUMN_TYPE_ID = "id";
-    private static final String COLUMN_TYPE_NAME = "name";
+    // WorkoutTypes Columns
+    public static final String COLUMN_WORKOUT_TYPE_ID = "workout_type"; // PK
+    public static final String COLUMN_WORKOUT_NAME = "name";
 
-    // Columns for workouts
-    private static final String COLUMN_WORKOUT_ID = "id";
-    private static final String COLUMN_WORKOUT_START = "start_time";
-    private static final String COLUMN_WORKOUT_END = "end_time";
-    private static final String COLUMN_WORKOUT_DURATION = "duration";
-    private static final String COLUMN_WORKOUT_TYPE_ID = "workout_type_id";
+    // WorkoutSessions Columns
+    public static final String COLUMN_WORKOUT_ID = "workout_id"; // PK
+    public static final String COLUMN_SESSION_WORKOUT_TYPE = "workout_type"; // FK
+    public static final String COLUMN_START_TIME = "start_time";
+    public static final String COLUMN_END_TIME = "end_time";
+    public static final String COLUMN_DURATION = "duration";
 
-    // Columns for exercises
-    private static final String COLUMN_EXERCISE_ID = "id";
-    private static final String COLUMN_EXERCISE_NAME = "name";
+    // Exercises Columns
+    public static final String COLUMN_EXERCISE_ID = "exercise_id"; // PK
+    public static final String COLUMN_EXERCISE_NAME = "exercise_name";
+    public static final String COLUMN_EXERCISE_WORKOUT_ID = "workout_id"; // FK
 
-    // Columns for workout_exercises
-    private static final String COLUMN_WORKOUT_EXERCISE_ID = "id";
-    private static final String COLUMN_WORKOUT_EXERCISE_WORKOUT_ID = "workout_id";
-    private static final String COLUMN_WORKOUT_EXERCISE_EXERCISE_ID = "exercise_id";
-    private static final String COLUMN_WORKOUT_EXERCISE_NAME = "exercise_name";
-
-    // Columns for sets
-    private static final String COLUMN_SET_ID = "id";
-    private static final String COLUMN_SET_WORKOUT_EXERCISE_ID = "workout_exercise_id";
-    private static final String COLUMN_SET_NUMBER = "set_number";
-    private static final String COLUMN_SET_REPS = "reps";
-    private static final String COLUMN_SET_WEIGHT = "weight";
+    // ExerciseSets Columns
+    public static final String COLUMN_SET_ID = "set_id"; // PK
+    public static final String COLUMN_SET_EXERCISE_ID = "exercise_id"; // FK
+    public static final String COLUMN_SET_NUMBER = "set_number";
+    public static final String COLUMN_REPS = "reps";
+    public static final String COLUMN_WEIGHT = "weight";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -52,47 +48,70 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        String CREATE_TABLE_WORKOUT_TYPES = "CREATE TABLE " + TABLE_WORKOUT_TYPES + " (" +
-                COLUMN_TYPE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COLUMN_TYPE_NAME + " TEXT NOT NULL);";
+        // WorkoutTypes Table
+        String CREATE_WORKOUT_TYPES = "CREATE TABLE " + TABLE_WORKOUT_TYPES + " (" +
+                COLUMN_WORKOUT_TYPE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                COLUMN_WORKOUT_NAME + " TEXT NOT NULL" +
+                ");";
 
-        String CREATE_TABLE_WORKOUTS = "CREATE TABLE " + TABLE_WORKOUTS + " (" +
+        // WorkoutSessions Table
+        String CREATE_WORKOUT_SESSIONS = "CREATE TABLE " + TABLE_WORKOUT_SESSIONS + " (" +
                 COLUMN_WORKOUT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COLUMN_WORKOUT_START + " DATETIME NOT NULL, " +
-                COLUMN_WORKOUT_END + " DATETIME, " +
-                COLUMN_WORKOUT_DURATION + " INTEGER, " +
-                COLUMN_WORKOUT_TYPE_ID + " INTEGER NOT NULL, " +
-                "FOREIGN KEY(" + COLUMN_WORKOUT_TYPE_ID + ") REFERENCES " + TABLE_WORKOUT_TYPES + "(" + COLUMN_TYPE_ID + "));";
+                COLUMN_SESSION_WORKOUT_TYPE + " INTEGER, " +
+                COLUMN_START_TIME + " TEXT, " +
+                COLUMN_END_TIME + " TEXT, " +
+                COLUMN_DURATION + " TEXT, " +
+                "FOREIGN KEY(" + COLUMN_SESSION_WORKOUT_TYPE + ") REFERENCES " +
+                TABLE_WORKOUT_TYPES + "(" + COLUMN_WORKOUT_TYPE_ID + ")" +
+                ");";
 
-        String CREATE_TABLE_EXERCISES = "CREATE TABLE " + TABLE_EXERCISES + " (" +
+        // Exercises Table
+        String CREATE_EXERCISES = "CREATE TABLE " + TABLE_EXERCISES + " (" +
                 COLUMN_EXERCISE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COLUMN_EXERCISE_NAME + " TEXT NOT NULL);";
+                COLUMN_EXERCISE_NAME + " TEXT NOT NULL, " +
+                COLUMN_EXERCISE_WORKOUT_ID + " INTEGER, " +
+                "FOREIGN KEY(" + COLUMN_EXERCISE_WORKOUT_ID + ") REFERENCES " +
+                TABLE_WORKOUT_SESSIONS + "(" + COLUMN_WORKOUT_ID + ")" +
+                ");";
 
-        String CREATE_TABLE_WORKOUT_EXERCISES = "CREATE TABLE " + TABLE_WORKOUT_EXERCISES + " (" +
-                COLUMN_WORKOUT_EXERCISE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COLUMN_WORKOUT_EXERCISE_WORKOUT_ID + " INTEGER NOT NULL, " +
-                COLUMN_WORKOUT_EXERCISE_EXERCISE_ID + " INTEGER NOT NULL, " +
-                COLUMN_WORKOUT_EXERCISE_NAME + " TEXT NOT NULL, " +
-                "FOREIGN KEY(" + COLUMN_WORKOUT_EXERCISE_WORKOUT_ID + ") REFERENCES " + TABLE_WORKOUTS + "(" + COLUMN_WORKOUT_ID + "), " +
-                "FOREIGN KEY(" + COLUMN_WORKOUT_EXERCISE_EXERCISE_ID + ") REFERENCES " + TABLE_EXERCISES + "(" + COLUMN_EXERCISE_ID + "));";
-
-        String CREATE_TABLE_SETS = "CREATE TABLE " + TABLE_SETS + " (" +
+        // ExerciseSets Table
+        String CREATE_EXERCISE_SETS = "CREATE TABLE " + TABLE_EXERCISE_SETS + " (" +
                 COLUMN_SET_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COLUMN_SET_WORKOUT_EXERCISE_ID + " INTEGER NOT NULL, " +
-                COLUMN_SET_NUMBER + " INTEGER NOT NULL, " +
-                COLUMN_SET_REPS + " INTEGER NOT NULL, " +
-                COLUMN_SET_WEIGHT + " REAL NOT NULL, " +
-                "FOREIGN KEY(" + COLUMN_SET_WORKOUT_EXERCISE_ID + ") REFERENCES " + TABLE_WORKOUT_EXERCISES + "(" + COLUMN_WORKOUT_EXERCISE_ID + "));";
+                COLUMN_SET_EXERCISE_ID + " INTEGER, " +
+                COLUMN_SET_NUMBER + " INTEGER, " +
+                COLUMN_REPS + " INTEGER, " +
+                COLUMN_WEIGHT + " REAL, " +
+                "FOREIGN KEY(" + COLUMN_SET_EXERCISE_ID + ") REFERENCES " +
+                TABLE_EXERCISES + "(" + COLUMN_EXERCISE_ID + ")" +
+                ");";
 
-        // Execute all CREATE statements
-        db.execSQL(CREATE_TABLE_WORKOUT_TYPES);
-        db.execSQL(CREATE_TABLE_WORKOUTS);
-        db.execSQL(CREATE_TABLE_EXERCISES);
-        db.execSQL(CREATE_TABLE_WORKOUT_EXERCISES);
-        db.execSQL(CREATE_TABLE_SETS);
+        // Execute creation statements
+        db.execSQL(CREATE_WORKOUT_TYPES);
+        db.execSQL(CREATE_WORKOUT_SESSIONS);
+        db.execSQL(CREATE_EXERCISES);
+        db.execSQL(CREATE_EXERCISE_SETS);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
+
+    // Inserting a new Workout Name when creating a Workout in Workout Selector
+    public long insertWorkoutType(String workoutName) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_WORKOUT_NAME, workoutName);
+
+        return db.insert(TABLE_WORKOUT_TYPES, null, values); // returns new row ID
+    }
+
+
+    // All Workout Names
+    public Cursor getAllWorkoutTypes() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_WORKOUT_TYPES + " ORDER BY " + COLUMN_WORKOUT_TYPE_ID + " DESC", null);
+    }
+
+
 }
