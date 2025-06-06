@@ -23,6 +23,6 @@
         android:hint="Workout Name"
         android:inputType="textPersonName"
         android:textColor="@color/white"
-        android:textColorHint="@color/background_gray"/>
+        android:textColorHint="@color/hint_gray"/>
 
 </LinearLayout>
