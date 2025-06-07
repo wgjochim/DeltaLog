@@ -56,6 +56,15 @@ public class WorkoutActivity extends AppCompatActivity {
         TextView timeText = findViewById(R.id.timeText);
         String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
         timeText.setText(currentTime);
+
+        ImageView finishWorkoutButton = findViewById(R.id.finishWorkoutButton);
+        finishWorkoutButton.setOnClickListener(v -> showFinishWorkoutDialog());
+
+        LinearLayout exerciseContainer = findViewById(R.id.exerciseCardContainer);
+        if (exerciseContainer.getChildCount() == 0) {
+            // Show the dialog after layout is fully drawn
+            exerciseContainer.post(this::showAddExerciseDialog);
+        }
     }
 
 
@@ -174,14 +183,28 @@ public class WorkoutActivity extends AppCompatActivity {
                     setLabel.setTextColor(ContextCompat.getColor(this, R.color.white));
                     setLabel.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
+                    LinearLayout weightWrapper = new LinearLayout(this);
+                    weightWrapper.setOrientation(LinearLayout.HORIZONTAL);
+                    weightWrapper.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                    weightWrapper.setGravity(Gravity.CENTER_VERTICAL);
+
                     EditText weightInput = new EditText(this);
                     weightInput.setHint("Weight");
                     weightInput.setTextSize(13);
-                    weightInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    weightInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
                     weightInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
                     weightInput.setTextColor(ContextCompat.getColor(this, R.color.white));
                     weightInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
                     weightInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                    TextView kgSuffix = new TextView(this);
+                    kgSuffix.setText("Kg     ");
+                    kgSuffix.setTextColor(ContextCompat.getColor(this, R.color.white));
+                    kgSuffix.setTextSize(13);
+                    kgSuffix.setPadding(8, 0, 0, 0);
+
+                    weightWrapper.addView(weightInput);
+                    weightWrapper.addView(kgSuffix);
 
                     EditText repsInput = new EditText(this);
                     repsInput.setHint("Reps");
@@ -190,7 +213,7 @@ public class WorkoutActivity extends AppCompatActivity {
                     repsInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
                     repsInput.setTextColor(ContextCompat.getColor(this, R.color.white));
                     repsInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
-                    repsInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                    repsInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.5f));
 
                     TextView removeBtn = new TextView(this);
                     removeBtn.setText("✕");
@@ -248,7 +271,7 @@ public class WorkoutActivity extends AppCompatActivity {
 
 
                     row.addView(setLabel);
-                    row.addView(weightInput);
+                    row.addView(weightWrapper);
                     row.addView(repsInput);
                     row.addView(removeBtn);
 
@@ -304,17 +327,61 @@ public class WorkoutActivity extends AppCompatActivity {
     // End of Add Exercise
 
 
+    // When going Back a safety Question
     @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {
         showDiscardWorkoutDialog();}
     private void showDiscardWorkoutDialog() {
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this, R.style.AlerdialogBackground)
                 .setTitle("Discard Workout?")
                 .setMessage("Are you sure you want to discard your workout?")
                 .setPositiveButton("Yes", (dialog, which) -> finish())
                 .setNegativeButton("No", null)
                 .show();
     }
+
+    private void showFinishWorkoutDialog() {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_finish_workout, null);
+
+        TextView durationTextView = dialogView.findViewById(R.id.durationValue);
+        TextView exercisesTextView = dialogView.findViewById(R.id.exercisesValue);
+
+        // Calculate duration from timeText
+        TextView timeText = findViewById(R.id.timeText);
+        String startTimeString = timeText.getText().toString();
+
+        try {
+            SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+            SimpleDateFormat timeOnlyFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+            Date startTime = fullFormat.parse(todayDate + " " + startTimeString);
+            long durationMillis = new Date().getTime() - startTime.getTime();
+            long minutes = durationMillis / (1000 * 60);
+
+            durationTextView.setText(minutes + " min");
+        } catch (Exception e) {
+            durationTextView.setText("N/A");
+        }
+
+        // Count exercises
+        LinearLayout exerciseContainer = findViewById(R.id.exerciseCardContainer);
+        int exercisesDone = exerciseContainer.getChildCount();
+        exercisesTextView.setText(String.valueOf(exercisesDone));
+
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.AlerdialogBackground)
+                .setTitle("Finish Workout")
+                .setView(dialogView)
+                .setPositiveButton("Finish", (dialogInterface, which) -> {
+                    Toast.makeText(this, "Workout finished!", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        dialog.show();
+    }
+
 
 }
