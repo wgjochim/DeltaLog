@@ -6,5 +6,5 @@
     <color name="foreground_gray">#333940</color>
     <color name="icon_selected_gray">#FFFFFF</color>
     <color name="bluish_gray">#253f52</color>
-    <color name="hint_gray">#CCCCCC</color>
+    <color name="hint_gray">#AAAAAA</color>
 </resources>

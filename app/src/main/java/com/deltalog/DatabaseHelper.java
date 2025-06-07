@@ -113,7 +113,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // All Workout Names
     public Cursor getAllWorkoutTypes() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM " + TABLE_WORKOUT_TYPES + " ORDER BY " + COLUMN_WORKOUT_TYPE_ID + " DESC", null);
+        return db.rawQuery("SELECT * FROM " + TABLE_WORKOUT_TYPES + " ORDER BY " + COLUMN_WORKOUT_TYPE_ID + " ASC", null);
     }
 
 
@@ -205,6 +205,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         cursor.close();
         return sets;
+    }
+
+    // Update Workout Names
+    public int updateWorkoutTypeName(int workoutTypeId, String newName) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_WORKOUT_NAME, newName);
+
+        return db.update(TABLE_WORKOUT_TYPES, values, COLUMN_WORKOUT_TYPE_ID + " = ?", new String[]{String.valueOf(workoutTypeId)});
+    }
+
+    // Get all past Workouts and their date, name and duration
+    public List<WorkoutSession> getWorkoutHistory() {
+        List<WorkoutSession> sessions = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT s." + COLUMN_WORKOUT_ID + ", t." + COLUMN_WORKOUT_NAME + ", s." + COLUMN_START_TIME + ", s." + COLUMN_DURATION +
+                " FROM " + TABLE_WORKOUT_SESSIONS + " s" +
+                " JOIN " + TABLE_WORKOUT_TYPES + " t ON s." + COLUMN_SESSION_WORKOUT_TYPE + " = t." + COLUMN_WORKOUT_TYPE_ID +
+                " ORDER BY s." + COLUMN_START_TIME + " DESC";
+
+        Cursor cursor = db.rawQuery(query, null);
+        while (cursor.moveToNext()) {
+            int workoutId = cursor.getInt(0);
+            String workoutName = cursor.getString(1);
+            String startTime = cursor.getString(2);
+            String duration = cursor.getString(3);
+
+            sessions.add(new WorkoutSession(workoutId, workoutName, startTime, duration));
+        }
+        cursor.close();
+        return sessions;
     }
 
 }

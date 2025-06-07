@@ -92,6 +92,38 @@ public class WorkoutSelectorFragment extends Fragment {
     }
 
 
+    private void showEditWorkoutDialog(int workoutTypeId, TextView nameText) {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View dialogView = inflater.inflate(R.layout.dialog_edit_workout, null); // reuse the same layout
+        EditText workoutNameInput = dialogView.findViewById(R.id.workoutNameInput);
+
+        workoutNameInput.setText(nameText.getText().toString());
+
+        AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.AlerdialogBackground)
+                .setView(dialogView)
+                .setPositiveButton("Save", (d, which) -> {
+                    String newName = workoutNameInput.getText().toString().trim();
+                    if (!newName.isEmpty()) {
+                        DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
+                        int rows = dbHelper.updateWorkoutTypeName(workoutTypeId, newName);
+                        if (rows > 0) {
+                            nameText.setText(newName); // update UI
+                            Toast.makeText(getContext(), "Workout updated!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Update failed.", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Workout name cannot be empty.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        dialog.show();
+    }
+
+
+
     // Creates Card with workout names in them. Is called in OnCreate with all saved names
     private View createWorkoutCard(String workoutName, int workoutTypeId) {
         CardView card = new CardView(requireContext());
@@ -116,6 +148,11 @@ public class WorkoutSelectorFragment extends Fragment {
             Intent intent = new Intent(requireContext(), WorkoutActivity.class);
             intent.putExtra(WorkoutActivity.WORKOUT_TYPE, workoutTypeId);
             startActivity(intent);
+        });
+
+        card.setOnLongClickListener(v -> {
+            showEditWorkoutDialog(workoutTypeId, nameText);
+            return true;
         });
 
         return card;

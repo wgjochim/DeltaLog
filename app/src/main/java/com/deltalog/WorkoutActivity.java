@@ -231,7 +231,7 @@ public class WorkoutActivity extends AppCompatActivity {
 
                     TextView removeBtn = new TextView(this);
                     removeBtn.setText("✕");
-                    removeBtn.setTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+                    removeBtn.setTextColor(ContextCompat.getColor(this, R.color.white));
                     removeBtn.setTextSize(18);
                     removeBtn.setPadding(16, 0, 0, 0);
 
@@ -300,7 +300,7 @@ public class WorkoutActivity extends AppCompatActivity {
                 // Add "+" button
                 TextView addRowButton = new TextView(this);
                 addRowButton.setText("+ Add Set");
-                addRowButton.setTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+                addRowButton.setTextColor(ContextCompat.getColor(this, R.color.white));
                 addRowButton.setTextSize(14);
                 addRowButton.setPadding(0, 24, 0, 0);
                 addRowButton.setOnClickListener(view -> addSetRow.run());
@@ -463,6 +463,7 @@ public class WorkoutActivity extends AppCompatActivity {
                             }
 
                             Toast.makeText(this, "Workout saved!", Toast.LENGTH_SHORT).show();
+                            finish();
                         } else {
                             Toast.makeText(this, "Error saving workout.", Toast.LENGTH_SHORT).show();
                         }
@@ -505,6 +506,10 @@ public class WorkoutActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         ));
         card.addView(setsContainer);
+
+        if (sets.size() == 0){
+            sets.add(new ExerciseSet(0, 0));
+        }
 
         for (int i = 0; i < sets.size(); i++) {
             ExerciseSet set = sets.get(i);
@@ -553,13 +558,55 @@ public class WorkoutActivity extends AppCompatActivity {
 
             TextView removeBtn = new TextView(this);
             removeBtn.setText("✕");
-            removeBtn.setTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+            removeBtn.setTextColor(ContextCompat.getColor(this, R.color.white));
             removeBtn.setTextSize(18);
             removeBtn.setPadding(16, 0, 0, 0);
 
             removeBtn.setOnClickListener(view -> {
-                setsContainer.removeView(row);
-                // Update set labels if needed
+                String weightText = weightInput.getText().toString().trim();
+                String repsText = repsInput.getText().toString().trim();
+                boolean isEdited = !weightText.isEmpty() || !repsText.isEmpty();
+
+                int remainingSets = setsContainer.getChildCount();
+
+                Runnable updateSetLabels = () -> {
+                    for (int k = 0; k < setsContainer.getChildCount(); k++) {
+                        LinearLayout setRow = (LinearLayout) setsContainer.getChildAt(k);
+                        TextView label = (TextView) setRow.getChildAt(0); // Assumes label is the first child
+                        label.setText("Set " + (k + 1) + ": ");
+                    }
+                };
+
+                if (remainingSets == 1) {
+                    // If only one set remains, prompt to delete entire exercise
+                    new AlertDialog.Builder(this)
+                            .setTitle("Delete Exercise")
+                            .setMessage("This is the last set. Do you want to delete the entire exercise?")
+                            .setPositiveButton("Delete", (dialogInterface, which) -> {
+                                // Remove the whole exercise card
+                                LinearLayout exerciseCardContainer = findViewById(R.id.exerciseCardContainer);
+                                View exerciseCard = (View) setsContainer.getParent(); // Card is parent of setsContainer
+                                exerciseCardContainer.removeView(exerciseCard);
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                } else {
+                    Runnable removeAndUpdate = () -> {
+                        setsContainer.removeView(row);
+                        updateSetLabels.run();
+                    };
+
+                    if (isEdited) {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Delete Set")
+                                .setMessage("Are you sure you want to delete the set?")
+                                .setPositiveButton("Delete", (dialogInterface, which) -> removeAndUpdate.run())
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                    } else {
+                        removeAndUpdate.run();
+                    }
+                }
             });
 
             row.addView(setLabel);
@@ -573,7 +620,7 @@ public class WorkoutActivity extends AppCompatActivity {
         // Add "+ Add Set" button
         TextView addRowButton = new TextView(this);
         addRowButton.setText("+ Add Set");
-        addRowButton.setTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+        addRowButton.setTextColor(ContextCompat.getColor(this, R.color.white));
         addRowButton.setTextSize(14);
         addRowButton.setPadding(0, 24, 0, 0);
         addRowButton.setOnClickListener(view -> {
