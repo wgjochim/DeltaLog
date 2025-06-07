@@ -30,6 +30,7 @@ import java.util.Locale;
 public class WorkoutActivity extends AppCompatActivity {
 
     public static final String WORKOUT_TYPE = "workout_type";
+    private LinearLayout exerciseContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +61,7 @@ public class WorkoutActivity extends AppCompatActivity {
         ImageView finishWorkoutButton = findViewById(R.id.finishWorkoutButton);
         finishWorkoutButton.setOnClickListener(v -> showFinishWorkoutDialog());
 
-        LinearLayout exerciseContainer = findViewById(R.id.exerciseCardContainer);
+        exerciseContainer = findViewById(R.id.exerciseCardContainer);
         if (exerciseContainer.getChildCount() == 0) {
             // Show the dialog after layout is fully drawn
             exerciseContainer.post(this::showAddExerciseDialog);
@@ -141,7 +142,7 @@ public class WorkoutActivity extends AppCompatActivity {
                 dialog.dismiss();
 
                 // Container to insert into
-                LinearLayout container = findViewById(R.id.exerciseCardContainer);
+                LinearLayout container = exerciseContainer;
 
                 // Card layout
                 LinearLayout card = new LinearLayout(this);
@@ -341,6 +342,9 @@ public class WorkoutActivity extends AppCompatActivity {
                 .show();
     }
 
+
+
+    // Finish Workout Logic
     private void showFinishWorkoutDialog() {
         LayoutInflater inflater = LayoutInflater.from(this);
         View dialogView = inflater.inflate(R.layout.dialog_finish_workout, null);
@@ -375,7 +379,84 @@ public class WorkoutActivity extends AppCompatActivity {
                 .setTitle("Finish Workout")
                 .setView(dialogView)
                 .setPositiveButton("Finish", (dialogInterface, which) -> {
-                    Toast.makeText(this, "Workout finished!", Toast.LENGTH_SHORT).show();
+                    // Extract workout type ID from intent
+                    int workoutTypeId = getIntent().getIntExtra(WORKOUT_TYPE, -1);
+
+                    if (workoutTypeId == -1) {
+                        Toast.makeText(this, "Workout type missing.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Get formatted times
+                    SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+                    SimpleDateFormat displayFormat = new SimpleDateFormat("dd:MM:yyyy", Locale.getDefault());
+
+                    String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+                    String startTimeText = ((TextView) findViewById(R.id.timeText)).getText().toString();
+
+                    try {
+                        Date startDateTime = fullFormat.parse(todayDate + " " + startTimeText);
+                        Date endDateTime = new Date();
+
+                        long durationMillis = endDateTime.getTime() - startDateTime.getTime();
+                        long minutes = durationMillis / (1000 * 60);
+
+                        String formattedStart = displayFormat.format(startDateTime);
+                        String formattedEnd = displayFormat.format(endDateTime);
+                        String duration = String.valueOf(minutes);
+
+                        // Insert session
+                        DatabaseHelper dbHelper = new DatabaseHelper(this);
+                        long newWorkoutId = dbHelper.insertWorkoutSession(workoutTypeId, formattedStart, formattedEnd, duration);
+
+                        if (newWorkoutId != -1) {
+
+                            for (int i = 0; i < exerciseContainer.getChildCount(); i++) {
+                                View exerciseCard = exerciseContainer.getChildAt(i);
+
+                                // Get exercise name
+                                TextView nameText = (TextView) ((LinearLayout) exerciseCard).getChildAt(0);
+                                String exerciseName = nameText.getText().toString();
+
+                                // Insert into exercises table
+                                long exerciseId = dbHelper.insertExercise(exerciseName, newWorkoutId);
+
+                                if (exerciseId != -1) {
+                                    // Get sets container
+                                    LinearLayout setsContainer = (LinearLayout) ((LinearLayout) exerciseCard).getChildAt(1);
+
+                                    for (int j = 0; j < setsContainer.getChildCount(); j++) {
+                                        LinearLayout row = (LinearLayout) setsContainer.getChildAt(j);
+
+                                        LinearLayout weightWrapper = (LinearLayout) row.getChildAt(1);
+                                        EditText weightInput = (EditText) weightWrapper.getChildAt(0);
+                                        EditText repsInput = (EditText) row.getChildAt(2);
+
+                                        String weightStr = weightInput.getText().toString().trim();
+                                        String repsStr = repsInput.getText().toString().trim();
+
+                                        if (!weightStr.isEmpty() && !repsStr.isEmpty()) {
+                                            try {
+                                                float weight = Float.parseFloat(weightStr);
+                                                int reps = Integer.parseInt(repsStr);
+
+                                                dbHelper.insertExerciseSet(exerciseId, j + 1, reps, weight);
+                                            } catch (NumberFormatException e) {
+                                                // Optionally log or handle bad input
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Toast.makeText(this, "Workout saved!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "Error saving workout.", Toast.LENGTH_SHORT).show();
+                        }
+
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Error saving workout: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("Cancel", null)
                 .create();

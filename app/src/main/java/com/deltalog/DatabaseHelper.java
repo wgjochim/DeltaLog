@@ -114,4 +114,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    // New Workout Entry
+    public long insertWorkoutSession(int workoutTypeId, String startTime, String endTime, String duration) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_SESSION_WORKOUT_TYPE, workoutTypeId);
+        values.put(COLUMN_START_TIME, startTime);
+        values.put(COLUMN_END_TIME, endTime);
+        values.put(COLUMN_DURATION, duration);
+        return db.insert(TABLE_WORKOUT_SESSIONS, null, values); // Returns new workout id
+    }
+
+    // Saving Exercise Name to a given Workout Id
+    public long insertExercise(String exerciseName, long workoutId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_EXERCISE_NAME, exerciseName);
+        values.put(COLUMN_EXERCISE_WORKOUT_ID, workoutId);
+        return db.insert(TABLE_EXERCISES, null, values); // return new exercise_id
+    }
+
+    // Saving Set, Weight and Reps to a given Exercise Id
+    public long insertExerciseSet(long exerciseId, int setNumber, int reps, float weight) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_SET_EXERCISE_ID, exerciseId);
+        values.put(COLUMN_SET_NUMBER, setNumber);
+        values.put(COLUMN_REPS, reps);
+        values.put(COLUMN_WEIGHT, weight);
+        return db.insert(TABLE_EXERCISE_SETS, null, values);
+    }
+
 }
