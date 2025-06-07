@@ -1,5 +1,7 @@
 package com.deltalog;
 
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -101,6 +103,26 @@ public class HistoryFragment extends Fragment {
         cardView.addView(layout);
 
         Log.d("FORMAT_DATE", "startTime: " + session.startTime);
+
+        cardView.setOnLongClickListener(v -> {
+            new AlertDialog.Builder(requireContext(), R.style.AlerdialogBackground)
+                    .setTitle("Delete Workout")
+                    .setMessage("Do you want to delete this workout from your history?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+                        dbHelper.deleteWorkoutSession(session.workoutId);
+                        parent.removeView(cardView); // remove from UI
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+            return true;
+        });
+
+        cardView.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), HistoryActivity.class);
+            intent.putExtra("workoutId", session.workoutId);
+            startActivity(intent);
+        });
 
         return cardView;
     }

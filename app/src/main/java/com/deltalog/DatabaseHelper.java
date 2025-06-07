@@ -239,4 +239,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return sessions;
     }
 
+    // Deletes Workout
+    public void deleteWorkoutSession(int workoutId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Delete all sets for exercises in this workout
+        db.execSQL("DELETE FROM " + TABLE_EXERCISE_SETS + " WHERE " + COLUMN_SET_EXERCISE_ID +
+                " IN (SELECT " + COLUMN_EXERCISE_ID + " FROM " + TABLE_EXERCISES +
+                " WHERE " + COLUMN_EXERCISE_WORKOUT_ID + " = ?)", new Object[]{workoutId});
+
+        // Delete all exercises for this workout
+        db.execSQL("DELETE FROM " + TABLE_EXERCISES +
+                " WHERE " + COLUMN_EXERCISE_WORKOUT_ID + " = ?", new Object[]{workoutId});
+
+        // Delete the workout session itself
+        db.delete(TABLE_WORKOUT_SESSIONS, COLUMN_WORKOUT_ID + " = ?", new String[]{String.valueOf(workoutId)});
+    }
+
 }
