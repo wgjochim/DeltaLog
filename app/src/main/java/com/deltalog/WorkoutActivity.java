@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class WorkoutActivity extends AppCompatActivity {
@@ -62,10 +63,22 @@ public class WorkoutActivity extends AppCompatActivity {
         finishWorkoutButton.setOnClickListener(v -> showFinishWorkoutDialog());
 
         exerciseContainer = findViewById(R.id.exerciseCardContainer);
+
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        long latestWorkoutId = dbHelper.getLatestWorkoutId(workoutTypeId);
+
+        if (latestWorkoutId != -1) {
+            List<Exercise> lastExercises = dbHelper.getExercisesForWorkout(latestWorkoutId);
+            for (Exercise exercise : lastExercises) {
+                createExerciseCardWithHints(exercise.name, exercise.sets);
+            }
+        }
+
         if (exerciseContainer.getChildCount() == 0) {
             // Show the dialog after layout is fully drawn
             exerciseContainer.post(this::showAddExerciseDialog);
         }
+
     }
 
 
@@ -463,6 +476,113 @@ public class WorkoutActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
+    private void createExerciseCardWithHints(String exerciseName, List<ExerciseSet> sets) {
+        LinearLayout container = exerciseContainer;
+
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackground(ContextCompat.getDrawable(this, R.drawable.card_background));
+        card.setPadding(48, 48, 48, 48);
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.setMargins(0, 24, 0, 0);
+        card.setLayoutParams(cardParams);
+
+        TextView nameText = new TextView(this);
+        nameText.setText(exerciseName);
+        nameText.setTextColor(ContextCompat.getColor(this, R.color.white));
+        nameText.setTextSize(18);
+        nameText.setTypeface(null, Typeface.BOLD);
+        card.addView(nameText);
+
+        LinearLayout setsContainer = new LinearLayout(this);
+        setsContainer.setOrientation(LinearLayout.VERTICAL);
+        setsContainer.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        card.addView(setsContainer);
+
+        for (int i = 0; i < sets.size(); i++) {
+            ExerciseSet set = sets.get(i);
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, 16, 0, 0);
+
+            TextView setLabel = new TextView(this);
+            setLabel.setText("Set " + (i + 1) + ": ");
+            setLabel.setTextColor(ContextCompat.getColor(this, R.color.white));
+            setLabel.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            LinearLayout weightWrapper = new LinearLayout(this);
+            weightWrapper.setOrientation(LinearLayout.HORIZONTAL);
+            weightWrapper.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            weightWrapper.setGravity(Gravity.CENTER_VERTICAL);
+
+            EditText weightInput = new EditText(this);
+            weightInput.setHint(String.valueOf(set.weight)); // Set hint
+            weightInput.setTextSize(13);
+            weightInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            weightInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
+            weightInput.setTextColor(ContextCompat.getColor(this, R.color.white));
+            weightInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+            weightInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            TextView kgSuffix = new TextView(this);
+            kgSuffix.setText("Kg     ");
+            kgSuffix.setTextColor(ContextCompat.getColor(this, R.color.white));
+            kgSuffix.setTextSize(13);
+            kgSuffix.setPadding(8, 0, 0, 0);
+
+            weightWrapper.addView(weightInput);
+            weightWrapper.addView(kgSuffix);
+
+            EditText repsInput = new EditText(this);
+            repsInput.setHint(String.valueOf(set.reps)); // Set hint
+            repsInput.setTextSize(13);
+            repsInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+            repsInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
+            repsInput.setTextColor(ContextCompat.getColor(this, R.color.white));
+            repsInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+            repsInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.5f));
+
+            TextView removeBtn = new TextView(this);
+            removeBtn.setText("✕");
+            removeBtn.setTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+            removeBtn.setTextSize(18);
+            removeBtn.setPadding(16, 0, 0, 0);
+
+            removeBtn.setOnClickListener(view -> {
+                setsContainer.removeView(row);
+                // Update set labels if needed
+            });
+
+            row.addView(setLabel);
+            row.addView(weightWrapper);
+            row.addView(repsInput);
+            row.addView(removeBtn);
+
+            setsContainer.addView(row);
+        }
+
+        // Add "+ Add Set" button
+        TextView addRowButton = new TextView(this);
+        addRowButton.setText("+ Add Set");
+        addRowButton.setTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+        addRowButton.setTextSize(14);
+        addRowButton.setPadding(0, 24, 0, 0);
+        addRowButton.setOnClickListener(view -> {
+        });
+
+        card.addView(addRowButton);
+        container.addView(card);
+    }
+
 
 
 }

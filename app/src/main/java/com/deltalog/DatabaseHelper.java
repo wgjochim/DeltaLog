@@ -6,6 +6,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Database Info
@@ -143,6 +146,65 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_REPS, reps);
         values.put(COLUMN_WEIGHT, weight);
         return db.insert(TABLE_EXERCISE_SETS, null, values);
+    }
+
+    // find last workout with the same workout_type
+    public int getLatestWorkoutId(int workoutType) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT MAX(" + COLUMN_WORKOUT_ID + ") FROM " + TABLE_WORKOUT_SESSIONS + " WHERE " + COLUMN_SESSION_WORKOUT_TYPE + " = ?",
+                new String[]{String.valueOf(workoutType)}
+        );
+        if (cursor.moveToFirst()) {
+            int latestId = cursor.getInt(0);
+            cursor.close();
+            return latestId;
+        } else {
+            cursor.close();
+            return -1; // no previous workout found
+        }
+    }
+
+    // find all exercise names and exercise ids from a workout id
+    public List<Exercise> getExercisesForWorkout(long workoutId) {
+        List<Exercise> exercises = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT exercise_id, exercise_name FROM exercises WHERE workout_id = ?",
+                new String[]{String.valueOf(workoutId)}
+        );
+
+        while (cursor.moveToNext()) {
+            long exerciseId = cursor.getLong(0);
+            String name = cursor.getString(1);
+            List<ExerciseSet> sets = getExerciseSets(exerciseId);
+            exercises.add(new Exercise(exerciseId, name, sets));
+        }
+
+        cursor.close();
+        return exercises;
+    }
+
+    // find all sets, weights and reps from an exercise id
+    public List<ExerciseSet> getExerciseSets(long exerciseId) {
+        List<ExerciseSet> sets = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT " + COLUMN_REPS + ", " + COLUMN_WEIGHT +
+                        " FROM " + TABLE_EXERCISE_SETS +
+                        " WHERE " + COLUMN_SET_EXERCISE_ID + " = ?" +
+                        " ORDER BY " + COLUMN_SET_NUMBER + " ASC",
+                new String[]{String.valueOf(exerciseId)}
+        );
+
+        while (cursor.moveToNext()) {
+            int reps = cursor.getInt(0);
+            float weight = cursor.getFloat(1);
+            sets.add(new ExerciseSet(reps, weight));
+        }
+
+        cursor.close();
+        return sets;
     }
 
 }
