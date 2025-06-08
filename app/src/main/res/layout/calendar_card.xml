@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/foreground_gray">
+
+    <!-- Month Title -->
+    <TextView
+        android:id="@+id/monthTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="June 2025"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_gravity="center"/>
+
+    <!-- Weekday Labels -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="15dp">
+
+        <!-- Days: M T W T F S S -->
+        <TextView android:text="M" style="@style/DayLabel"/>
+        <TextView android:text="T" style="@style/DayLabel"/>
+        <TextView android:text="W" style="@style/DayLabel"/>
+        <TextView android:text="T" style="@style/DayLabel"/>
+        <TextView android:text="F" style="@style/DayLabel"/>
+        <TextView android:text="S" style="@style/DayLabel"/>
+        <TextView android:text="S" style="@style/DayLabel"/>
+    </LinearLayout>
+
+    <!-- Calendar Dates -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/calendarRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</LinearLayout>

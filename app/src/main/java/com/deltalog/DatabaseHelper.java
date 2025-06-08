@@ -6,8 +6,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -255,5 +259,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Delete the workout session itself
         db.delete(TABLE_WORKOUT_SESSIONS, COLUMN_WORKOUT_ID + " = ?", new String[]{String.valueOf(workoutId)});
     }
+
+    public Set<LocalDate> getWorkoutDatesForMonth(YearMonth month) {
+        Set<LocalDate> dates = new HashSet<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT DISTINCT " + COLUMN_START_TIME +
+                " FROM " + TABLE_WORKOUT_SESSIONS, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                String rawDate = cursor.getString(0).split(" ")[0]; // in format DD:MM:YYYY
+                try {
+                    String[] parts = rawDate.split(":");
+                    if (parts.length == 3) {
+                        int day = Integer.parseInt(parts[0]);
+                        int monthVal = Integer.parseInt(parts[1]);
+                        int year = Integer.parseInt(parts[2]);
+
+                        LocalDate parsedDate = LocalDate.of(year, monthVal, day);
+                        if (parsedDate.getYear() == month.getYear() && parsedDate.getMonth() == month.getMonth()) {
+                            dates.add(parsedDate);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        return dates;
+    }
+
+
 
 }
