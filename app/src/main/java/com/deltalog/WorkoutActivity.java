@@ -624,6 +624,72 @@ public class WorkoutActivity extends AppCompatActivity {
         addRowButton.setTextSize(14);
         addRowButton.setPadding(0, 24, 0, 0);
         addRowButton.setOnClickListener(view -> {
+            int setNumber = setsContainer.getChildCount() + 1;
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, 16, 0, 0);
+
+            TextView setLabel = new TextView(this);
+            setLabel.setText("Set " + setNumber + ": ");
+            setLabel.setTextColor(ContextCompat.getColor(this, R.color.white));
+            setLabel.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            LinearLayout weightWrapper = new LinearLayout(this);
+            weightWrapper.setOrientation(LinearLayout.HORIZONTAL);
+            weightWrapper.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            weightWrapper.setGravity(Gravity.CENTER_VERTICAL);
+
+            EditText weightInput = new EditText(this);
+            weightInput.setHint("0");
+            weightInput.setTextSize(13);
+            weightInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            weightInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
+            weightInput.setTextColor(ContextCompat.getColor(this, R.color.white));
+            weightInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+            weightInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            TextView kgSuffix = new TextView(this);
+            kgSuffix.setText("Kg     ");
+            kgSuffix.setTextColor(ContextCompat.getColor(this, R.color.white));
+            kgSuffix.setTextSize(13);
+            kgSuffix.setPadding(8, 0, 0, 0);
+
+            weightWrapper.addView(weightInput);
+            weightWrapper.addView(kgSuffix);
+
+            EditText repsInput = new EditText(this);
+            repsInput.setHint("0");
+            repsInput.setTextSize(13);
+            repsInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+            repsInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
+            repsInput.setTextColor(ContextCompat.getColor(this, R.color.white));
+            repsInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+            repsInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.5f));
+
+            TextView removeBtn = new TextView(this);
+            removeBtn.setText("✕");
+            removeBtn.setTextColor(ContextCompat.getColor(this, R.color.white));
+            removeBtn.setTextSize(18);
+            removeBtn.setPadding(16, 0, 0, 0);
+
+            removeBtn.setOnClickListener(v -> {
+                setsContainer.removeView(row);
+                // Re-label remaining sets
+                for (int i = 0; i < setsContainer.getChildCount(); i++) {
+                    LinearLayout setRow = (LinearLayout) setsContainer.getChildAt(i);
+                    TextView label = (TextView) setRow.getChildAt(0);
+                    label.setText("Set " + (i + 1) + ": ");
+                }
+            });
+
+            row.addView(setLabel);
+            row.addView(weightWrapper);
+            row.addView(repsInput);
+            row.addView(removeBtn);
+
+            setsContainer.addView(row);
         });
 
         card.addView(addRowButton);

@@ -1,6 +1,7 @@
 package com.deltalog;
 
 import android.annotation.SuppressLint;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
@@ -58,7 +59,6 @@ public class HistoryActivity extends AppCompatActivity {
         timeText.setText(currentTime);
 
         ImageView finishWorkoutButton = findViewById(R.id.finishWorkoutButton);
-        finishWorkoutButton.setOnClickListener(v -> showFinishWorkoutDialog());
 
         exerciseContainer = findViewById(R.id.exerciseCardContainer);
 
@@ -69,6 +69,7 @@ public class HistoryActivity extends AppCompatActivity {
             createExerciseCardWithHints(exercise.name, exercise.sets);
         }
 
+        finishWorkoutButton.setOnClickListener(v -> showSaveDialog(workoutId));
 
         if (exerciseContainer.getChildCount() == 0) {
             // Show the dialog after layout is fully drawn
@@ -344,126 +345,75 @@ public class HistoryActivity extends AppCompatActivity {
         finish();}
 
 
-    // Finish Workout Logic
-    private void showFinishWorkoutDialog() {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View dialogView = inflater.inflate(R.layout.dialog_finish_workout, null);
+    private void showSaveDialog(int workoutId) {
+        new AlertDialog.Builder(this, R.style.AlerdialogBackground)
+                .setTitle("Save Changes?")
+                .setPositiveButton("Save", (dialog, which) -> updateWorkoutExercisesAndSets(workoutId))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
 
-        TextView durationTextView = dialogView.findViewById(R.id.durationValue);
-        TextView exercisesTextView = dialogView.findViewById(R.id.exercisesValue);
 
-        // Calculate duration from timeText
-        TextView timeText = findViewById(R.id.timeText);
-        String startTimeString = timeText.getText().toString();
+    private void updateWorkoutExercisesAndSets(long workoutId) {
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.beginTransaction();
 
         try {
-            SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-            SimpleDateFormat timeOnlyFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-            String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            // Step 1: Delete old sets and exercises
+            db.execSQL("DELETE FROM ExerciseSets WHERE exercise_id IN (SELECT exercise_id FROM Exercises WHERE workout_id = ?)", new Object[]{workoutId});
+            db.execSQL("DELETE FROM Exercises WHERE workout_id = ?", new Object[]{workoutId});
 
-            Date startTime = fullFormat.parse(todayDate + " " + startTimeString);
-            long durationMillis = new Date().getTime() - startTime.getTime();
-            long minutes = durationMillis / (1000 * 60);
+            // Step 2: Re-insert updated exercises and sets
+            LinearLayout exerciseContainer = findViewById(R.id.exerciseCardContainer);
 
-            durationTextView.setText(minutes + " min");
-        } catch (Exception e) {
-            durationTextView.setText("N/A");
-        }
+            for (int i = 0; i < exerciseContainer.getChildCount(); i++) {
+                View exerciseCard = exerciseContainer.getChildAt(i);
 
-        // Count exercises
-        LinearLayout exerciseContainer = findViewById(R.id.exerciseCardContainer);
-        int exercisesDone = exerciseContainer.getChildCount();
-        exercisesTextView.setText(String.valueOf(exercisesDone));
+                // Get exercise name
+                TextView nameText = (TextView) ((LinearLayout) exerciseCard).getChildAt(0);
+                String exerciseName = nameText.getText().toString();
 
-        AlertDialog dialog = new AlertDialog.Builder(this, R.style.AlerdialogBackground)
-                .setTitle("Finish Workout")
-                .setView(dialogView)
-                .setPositiveButton("Finish", (dialogInterface, which) -> {
-                    // Extract workout type ID from intent
-                    int workoutTypeId = getIntent().getIntExtra(WORKOUT_TYPE, -1);
+                long exerciseId = dbHelper.insertExercise(exerciseName, workoutId);
 
-                    if (workoutTypeId == -1) {
-                        Toast.makeText(this, "Workout type missing.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+                if (exerciseId != -1) {
+                    // Get sets container
+                    LinearLayout setsContainer = (LinearLayout) ((LinearLayout) exerciseCard).getChildAt(1);
 
-                    // Get formatted times
-                    SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-                    SimpleDateFormat displayFormat = new SimpleDateFormat("dd:MM:yyyy", Locale.getDefault());
+                    for (int j = 0; j < setsContainer.getChildCount(); j++) {
+                        LinearLayout row = (LinearLayout) setsContainer.getChildAt(j);
 
-                    String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-                    String startTimeText = ((TextView) findViewById(R.id.timeText)).getText().toString();
+                        LinearLayout weightWrapper = (LinearLayout) row.getChildAt(1);
+                        EditText weightInput = (EditText) weightWrapper.getChildAt(0);
+                        EditText repsInput = (EditText) row.getChildAt(2);
 
-                    try {
-                        Date startDateTime = fullFormat.parse(todayDate + " " + startTimeText);
-                        Date endDateTime = new Date();
+                        String weightStr = weightInput.getText().toString().trim();
+                        String repsStr = repsInput.getText().toString().trim();
 
-                        long durationMillis = endDateTime.getTime() - startDateTime.getTime();
-                        long minutes = durationMillis / (1000 * 60);
+                        if (!weightStr.isEmpty() && !repsStr.isEmpty()) {
+                            try {
+                                float weight = Float.parseFloat(weightStr);
+                                int reps = Integer.parseInt(repsStr);
 
-                        String formattedStart = displayFormat.format(startDateTime);
-                        String formattedEnd = displayFormat.format(endDateTime);
-                        String duration = String.valueOf(minutes);
-
-                        // Insert session
-                        DatabaseHelper dbHelper = new DatabaseHelper(this);
-                        long newWorkoutId = dbHelper.insertWorkoutSession(workoutTypeId, formattedStart, formattedEnd, duration);
-
-                        if (newWorkoutId != -1) {
-
-                            for (int i = 0; i < exerciseContainer.getChildCount(); i++) {
-                                View exerciseCard = exerciseContainer.getChildAt(i);
-
-                                // Get exercise name
-                                TextView nameText = (TextView) ((LinearLayout) exerciseCard).getChildAt(0);
-                                String exerciseName = nameText.getText().toString();
-
-                                // Insert into exercises table
-                                long exerciseId = dbHelper.insertExercise(exerciseName, newWorkoutId);
-
-                                if (exerciseId != -1) {
-                                    // Get sets container
-                                    LinearLayout setsContainer = (LinearLayout) ((LinearLayout) exerciseCard).getChildAt(1);
-
-                                    for (int j = 0; j < setsContainer.getChildCount(); j++) {
-                                        LinearLayout row = (LinearLayout) setsContainer.getChildAt(j);
-
-                                        LinearLayout weightWrapper = (LinearLayout) row.getChildAt(1);
-                                        EditText weightInput = (EditText) weightWrapper.getChildAt(0);
-                                        EditText repsInput = (EditText) row.getChildAt(2);
-
-                                        String weightStr = weightInput.getText().toString().trim();
-                                        String repsStr = repsInput.getText().toString().trim();
-
-                                        if (!weightStr.isEmpty() && !repsStr.isEmpty()) {
-                                            try {
-                                                float weight = Float.parseFloat(weightStr);
-                                                int reps = Integer.parseInt(repsStr);
-
-                                                dbHelper.insertExerciseSet(exerciseId, j + 1, reps, weight);
-                                            } catch (NumberFormatException e) {
-                                                // Optionally log or handle bad input
-                                            }
-                                        }
-                                    }
-                                }
+                                dbHelper.insertExerciseSet(exerciseId, j + 1, reps, weight);
+                            } catch (NumberFormatException e) {
+                                // Optionally log or ignore bad input
                             }
-
-                            Toast.makeText(this, "Workout saved!", Toast.LENGTH_SHORT).show();
-                            finish();
-                        } else {
-                            Toast.makeText(this, "Error saving workout.", Toast.LENGTH_SHORT).show();
                         }
-
-                    } catch (Exception e) {
-                        Toast.makeText(this, "Error saving workout: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                })
-                .setNegativeButton("Cancel", null)
-                .create();
+                }
+            }
 
-        dialog.show();
+            db.setTransactionSuccessful();
+            Toast.makeText(this, "Workout updated!", Toast.LENGTH_SHORT).show();
+            finish();
+        } catch (Exception e) {
+            Toast.makeText(this, "Error updating workout: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            db.endTransaction();
+        }
     }
+
 
     private void createExerciseCardWithHints(String exerciseName, List<ExerciseSet> sets) {
         LinearLayout container = exerciseContainer;
@@ -611,6 +561,72 @@ public class HistoryActivity extends AppCompatActivity {
         addRowButton.setTextSize(14);
         addRowButton.setPadding(0, 24, 0, 0);
         addRowButton.setOnClickListener(view -> {
+            int setNumber = setsContainer.getChildCount() + 1;
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, 16, 0, 0);
+
+            TextView setLabel = new TextView(this);
+            setLabel.setText("Set " + setNumber + ": ");
+            setLabel.setTextColor(ContextCompat.getColor(this, R.color.white));
+            setLabel.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            LinearLayout weightWrapper = new LinearLayout(this);
+            weightWrapper.setOrientation(LinearLayout.HORIZONTAL);
+            weightWrapper.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            weightWrapper.setGravity(Gravity.CENTER_VERTICAL);
+
+            EditText weightInput = new EditText(this);
+            weightInput.setHint("0");
+            weightInput.setTextSize(13);
+            weightInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            weightInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
+            weightInput.setTextColor(ContextCompat.getColor(this, R.color.white));
+            weightInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+            weightInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            TextView kgSuffix = new TextView(this);
+            kgSuffix.setText("Kg     ");
+            kgSuffix.setTextColor(ContextCompat.getColor(this, R.color.white));
+            kgSuffix.setTextSize(13);
+            kgSuffix.setPadding(8, 0, 0, 0);
+
+            weightWrapper.addView(weightInput);
+            weightWrapper.addView(kgSuffix);
+
+            EditText repsInput = new EditText(this);
+            repsInput.setHint("0");
+            repsInput.setTextSize(13);
+            repsInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+            repsInput.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.white));
+            repsInput.setTextColor(ContextCompat.getColor(this, R.color.white));
+            repsInput.setHintTextColor(ContextCompat.getColor(this, R.color.hint_gray));
+            repsInput.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.5f));
+
+            TextView removeBtn = new TextView(this);
+            removeBtn.setText("✕");
+            removeBtn.setTextColor(ContextCompat.getColor(this, R.color.white));
+            removeBtn.setTextSize(18);
+            removeBtn.setPadding(16, 0, 0, 0);
+
+            removeBtn.setOnClickListener(v -> {
+                setsContainer.removeView(row);
+                // Re-label remaining sets
+                for (int i = 0; i < setsContainer.getChildCount(); i++) {
+                    LinearLayout setRow = (LinearLayout) setsContainer.getChildAt(i);
+                    TextView label = (TextView) setRow.getChildAt(0);
+                    label.setText("Set " + (i + 1) + ": ");
+                }
+            });
+
+            row.addView(setLabel);
+            row.addView(weightWrapper);
+            row.addView(repsInput);
+            row.addView(removeBtn);
+
+            setsContainer.addView(row);
         });
 
         card.addView(addRowButton);
