@@ -402,7 +402,7 @@ public class WorkoutActivity extends AppCompatActivity {
 
                     // Get formatted times
                     SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-                    SimpleDateFormat displayFormat = new SimpleDateFormat("dd:MM:yyyy", Locale.getDefault());
+                    SimpleDateFormat displayFormat = new SimpleDateFormat("dd:MM:yyyy HH:mm", Locale.getDefault());
 
                     String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
                     String startTimeText = ((TextView) findViewById(R.id.timeText)).getText().toString();

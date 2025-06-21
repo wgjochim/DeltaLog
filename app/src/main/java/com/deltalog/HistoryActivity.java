@@ -24,6 +24,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -56,8 +57,25 @@ public class HistoryActivity extends AppCompatActivity {
 
         String startTime = getIntent().getStringExtra("startTime");
         TextView timeText = findViewById(R.id.timeText);
-        String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-        timeText.setText(currentTime);
+
+        try {
+            // Parse the incoming startTime string using the full format
+            SimpleDateFormat fullFormat = new SimpleDateFormat("dd:MM:yyyy HH:mm", Locale.getDefault());
+            Date parsedDate = fullFormat.parse(startTime);
+
+            // Format only to HH:mm
+            SimpleDateFormat timeOnlyFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            String timeOnly = timeOnlyFormat.format(parsedDate);
+
+            // Set it to the TextView
+            timeText.setText(timeOnly);
+
+        } catch (ParseException e) {
+            // Fallback to 00:00
+            timeText.setText("00:00");
+            e.printStackTrace(); // Optional logging
+        }
+
 
         ImageView finishWorkoutButton = findViewById(R.id.finishWorkoutButton);
 
