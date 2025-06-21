@@ -15,12 +15,13 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        return gestureDetector.onTouchEvent(event);
+        gestureDetector.onTouchEvent(event);
+        return false;
     }
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
-        private static final int SWIPE_THRESHOLD = 50; // in pixels
-        private static final int SWIPE_VELOCITY_THRESHOLD = 50; // in pixels/sec
+        private static final int SWIPE_THRESHOLD = 100; // in pixels
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100; // in pixels/sec
 
         @Override
         public boolean onDown(MotionEvent e) {

@@ -228,7 +228,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String query = "SELECT s." + COLUMN_WORKOUT_ID + ", t." + COLUMN_WORKOUT_NAME + ", s." + COLUMN_START_TIME + ", s." + COLUMN_DURATION +
                 " FROM " + TABLE_WORKOUT_SESSIONS + " s" +
                 " JOIN " + TABLE_WORKOUT_TYPES + " t ON s." + COLUMN_SESSION_WORKOUT_TYPE + " = t." + COLUMN_WORKOUT_TYPE_ID +
-                " ORDER BY s." + COLUMN_START_TIME + " DESC";
+                " ORDER BY s." + COLUMN_WORKOUT_ID + " DESC";
 
         Cursor cursor = db.rawQuery(query, null);
         while (cursor.moveToNext()) {

@@ -54,6 +54,7 @@ public class HistoryActivity extends AppCompatActivity {
         ImageView backArrow = findViewById(R.id.back_arrow);
         backArrow.setOnClickListener(v -> onBackPressed());
 
+        String startTime = getIntent().getStringExtra("startTime");
         TextView timeText = findViewById(R.id.timeText);
         String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
         timeText.setText(currentTime);

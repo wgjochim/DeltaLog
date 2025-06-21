@@ -102,8 +102,6 @@ public class HistoryFragment extends Fragment {
         layout.addView(date);
         cardView.addView(layout);
 
-        Log.d("FORMAT_DATE", "startTime: " + session.startTime);
-
         cardView.setOnLongClickListener(v -> {
             new AlertDialog.Builder(requireContext(), R.style.AlerdialogBackground)
                     .setTitle("Delete Workout")
@@ -121,6 +119,7 @@ public class HistoryFragment extends Fragment {
         cardView.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), HistoryActivity.class);
             intent.putExtra("workoutId", session.workoutId);
+            intent.putExtra("startTime", session.startTime);
             startActivity(intent);
         });
 

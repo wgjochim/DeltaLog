@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_gray"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <!-- Back Arrow -->
+            <ImageView
+                android:id="@+id/back_arrow"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_back_arrow"
+                android:contentDescription="Back"
+                android:layout_gravity="center_vertical"
+                />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="0.7" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Credits"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:layout_gravity="center_vertical"
+                android:paddingBottom="4dp"
+                />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+
+        </LinearLayout>
+
+
+        <!-- Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Icon Credits"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:paddingBottom="8dp"
+            android:textColor="@color/hint_gray"/>
+
+        <!-- Intro -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This app uses icons licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0). Modified by Walter Jochim / DeltaLog."
+            android:textSize="14sp"
+            android:paddingBottom="16dp"
+            android:textColor="@color/hint_gray"/>
+
+        <!-- Icon 1 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="History 76"
+            android:textStyle="bold"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Collection: Solar Broken Line Icons"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Author: Solar Icons"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Modified by: Walter Jochim / DeltaLog"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="License: CC BY 4.0"
+            android:paddingBottom="12dp"
+            android:textColor="@color/hint_gray"/>
+
+        <!-- Icon 2 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="List Check 22"
+            android:textStyle="bold"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Collection: Dazzle Line Icons"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Author: Dazzle UI"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Modified by: Walter Jochim / DeltaLog"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="License: CC BY 4.0"
+            android:paddingBottom="12dp"
+            android:textColor="@color/hint_gray"/>
+
+        <!-- Icon 3 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Menu Alt 2 SVG Vector"
+            android:textStyle="bold"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Collection: Dazzle Line Icons"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Author: Dazzle UI"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Modified by: Walter Jochim / DeltaLog"
+            android:textColor="@color/hint_gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="License: CC BY 4.0"
+            android:textColor="@color/hint_gray"/>
+    </LinearLayout>
+</ScrollView>
