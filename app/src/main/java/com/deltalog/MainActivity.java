@@ -33,7 +33,11 @@ public class MainActivity extends AppCompatActivity {
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         );
 
-        replaceFragment(new HomeFragment());
+        // Only set the default fragment if there's no savedInstanceState
+        if (savedInstanceState == null) {
+            replaceFragment(new HomeFragment());
+            binding.bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        }
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
