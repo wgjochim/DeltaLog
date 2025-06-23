@@ -293,5 +293,122 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    public List<String> getThisWeeksDurations() {
+        List<String> durations = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1); // Monday
+        LocalDate endOfWeek = startOfWeek.plusDays(6); // Sunday
+
+        Cursor cursor = db.rawQuery("SELECT " + COLUMN_DURATION + ", " + COLUMN_START_TIME +
+                " FROM " + TABLE_WORKOUT_SESSIONS, null);
+
+        while (cursor.moveToNext()) {
+            String duration = cursor.getString(0); // e.g., "45 min"
+            String dateStr = cursor.getString(1).split(" ")[0]; // e.g., "17:06:2025"
+
+            try {
+                String[] parts = dateStr.split(":");
+                if (parts.length == 3) {
+                    int day = Integer.parseInt(parts[0]);
+                    int month = Integer.parseInt(parts[1]);
+                    int year = Integer.parseInt(parts[2]);
+                    LocalDate date = LocalDate.of(year, month, day);
+
+                    if (!date.isBefore(startOfWeek) && !date.isAfter(endOfWeek)) {
+                        durations.add(duration);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        cursor.close();
+        return durations;
+    }
+
+    public int getLatestWorkoutIdOverall() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT MAX(" + COLUMN_WORKOUT_ID + ") FROM " + TABLE_WORKOUT_SESSIONS,
+                null
+        );
+
+        int latestId = -1;
+        if (cursor.moveToFirst()) {
+            latestId = cursor.getInt(0);
+        }
+
+        cursor.close();
+        return latestId;
+    }
+
+
+    public List<ExerciseComparison> compareAllExercisesWithPrevious(int currentWorkoutId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Step 1: Get workout type
+        int workoutType = -1;
+        Cursor typeCursor = db.rawQuery(
+                "SELECT " + COLUMN_SESSION_WORKOUT_TYPE +
+                        " FROM " + TABLE_WORKOUT_SESSIONS +
+                        " WHERE " + COLUMN_WORKOUT_ID + " = ?",
+                new String[]{String.valueOf(currentWorkoutId)}
+        );
+        if (typeCursor.moveToFirst()) {
+            workoutType = typeCursor.getInt(0);
+        }
+        typeCursor.close();
+        if (workoutType == -1) return null;
+
+        // Step 2: Get previous workout ID of same type
+        Cursor prevCursor = db.rawQuery(
+                "SELECT " + COLUMN_WORKOUT_ID +
+                        " FROM " + TABLE_WORKOUT_SESSIONS +
+                        " WHERE " + COLUMN_SESSION_WORKOUT_TYPE + " = ? AND " + COLUMN_WORKOUT_ID + " < ?" +
+                        " ORDER BY " + COLUMN_WORKOUT_ID + " DESC LIMIT 1",
+                new String[]{String.valueOf(workoutType), String.valueOf(currentWorkoutId)}
+        );
+        int previousWorkoutId = -1;
+        if (prevCursor.moveToFirst()) {
+            previousWorkoutId = prevCursor.getInt(0);
+        }
+        prevCursor.close();
+        if (previousWorkoutId == -1) return null;
+
+        // Step 3: Get exercises from both workouts
+        List<Exercise> currentExercises = getExercisesForWorkout(currentWorkoutId);
+        List<Exercise> previousExercises = getExercisesForWorkout(previousWorkoutId);
+
+        List<ExerciseComparison> results = new ArrayList<>();
+
+        // Step 4: Compare by exercise name
+        for (Exercise current : currentExercises) {
+            for (Exercise previous : previousExercises) {
+                if (current.name.equals(previous.name)) {
+                    List<ExerciseSetComparison> comparisons = new ArrayList<>();
+                    int setCount = Math.min(current.sets.size(), previous.sets.size());
+
+                    for (int i = 0; i < setCount; i++) {
+                        ExerciseSet currSet = current.sets.get(i);
+                        ExerciseSet prevSet = previous.sets.get(i);
+                        comparisons.add(new ExerciseSetComparison(
+                                currSet.reps - prevSet.reps,
+                                currSet.weight - prevSet.weight
+                        ));
+                    }
+
+                    results.add(new ExerciseComparison(current.name, comparisons));
+                    break;
+                }
+            }
+        }
+
+        return results;
+    }
+
+
 
 }
