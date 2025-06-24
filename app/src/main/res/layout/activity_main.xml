@@ -31,6 +31,6 @@
         app:menu="@menu/bottom_nav_menu"
         android:background="@color/background_gray"
         app:itemIconTint="@color/bottom_nav_item_color"
-        app:itemTextColor="@color/bottom_nav_item_color"/>
+        app:itemTextColor="@color/bottom_nav_text_color"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,6 +9,10 @@
         android:icon="@drawable/ic_dumbbell"
         android:id="@+id/nav_workout"/>
 
+    <item android:title="@string/progress"
+        android:icon="@drawable/ic_progress"
+        android:id="@+id/nav_progress"/>
+
     <item android:title="@string/history"
         android:icon="@drawable/ic_history"
         android:id="@+id/nav_history"/>

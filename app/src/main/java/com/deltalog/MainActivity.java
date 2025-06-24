@@ -47,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
                 replaceFragment(new WorkoutSelectorFragment());
             } else if (itemId == R.id.nav_history) {
                 replaceFragment(new HistoryFragment());
+            } else if (itemId == R.id.nav_progress) {
+                replaceFragment(new ProgressFragment());
             }
             return true;
         });

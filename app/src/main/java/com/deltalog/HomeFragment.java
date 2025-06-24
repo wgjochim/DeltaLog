@@ -196,7 +196,8 @@ public class HomeFragment extends Fragment {
             TextView emptyView = new TextView(requireContext());
             emptyView.setText("No past workout found.");
             emptyView.setTextSize(14);
-            emptyView.setPadding(0, 8, 0, 0);
+            emptyView.setPadding(0, 8, 0, 8);
+            emptyView.setTextColor(Color.WHITE);
             layoutLastWorkout.addView(emptyView);
         }
 

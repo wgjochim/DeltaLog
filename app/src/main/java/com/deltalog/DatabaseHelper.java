@@ -337,7 +337,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
 
         int latestId = -1;
-        if (cursor.moveToFirst()) {
+        if (cursor.moveToFirst() && !cursor.isNull(0)) {
             latestId = cursor.getInt(0);
         }
 
@@ -409,6 +409,62 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return results;
     }
 
+
+    public List<Float> getLastTenSetOneWeightsForExercise(String exerciseName) {
+        List<Float> weights = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Get last 10 exercises of this name ordered by exercise_id (latest first)
+        Cursor cursor = db.rawQuery(
+                "SELECT e." + COLUMN_EXERCISE_ID +
+                        " FROM " + TABLE_EXERCISES + " e" +
+                        " WHERE e." + COLUMN_EXERCISE_NAME + " = ?" +
+                        " ORDER BY e." + COLUMN_EXERCISE_ID + " DESC LIMIT 10",
+                new String[]{exerciseName}
+        );
+
+        List<Long> exerciseIds = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            exerciseIds.add(cursor.getLong(0));
+        }
+        cursor.close();
+
+        // Now for each exercise_id, get the weight where set_number = 1
+        for (long exerciseId : exerciseIds) {
+            Cursor setCursor = db.rawQuery(
+                    "SELECT " + COLUMN_WEIGHT +
+                            " FROM " + TABLE_EXERCISE_SETS +
+                            " WHERE " + COLUMN_SET_EXERCISE_ID + " = ? AND " + COLUMN_SET_NUMBER + " = 1",
+                    new String[]{String.valueOf(exerciseId)}
+            );
+
+            if (setCursor.moveToFirst()) {
+                weights.add(setCursor.getFloat(0));
+            }
+            setCursor.close();
+        }
+
+        return weights;
+    }
+
+
+    public List<String> getAllUniqueExerciseNames() {
+        List<String> names = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(
+                "SELECT DISTINCT " + COLUMN_EXERCISE_NAME +
+                        " FROM " + TABLE_EXERCISES +
+                        " ORDER BY " + COLUMN_EXERCISE_NAME + " ASC",
+                null
+        );
+
+        while (cursor.moveToNext()) {
+            names.add(cursor.getString(0));
+        }
+        cursor.close();
+        return names;
+    }
 
 
 }
