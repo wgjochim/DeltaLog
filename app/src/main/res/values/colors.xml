@@ -7,4 +7,8 @@
     <color name="icon_selected_gray">#FFFFFF</color>
     <color name="bluish_gray">#253f52</color>
     <color name="hint_gray">#AAAAAA</color>
+    <color name="switch_blue">#2196F3</color>
+    <color name="switch_red">#F44336</color>
+    <color name="switch_track_blue">#802196F3</color>
+    <color name="switch_track_red">#80F44336</color>
 </resources>

@@ -447,6 +447,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return weights;
     }
 
+    public List<Integer> getLastTenSetOneRepsForExercise(String exerciseName) {
+        List<Integer> repsList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(
+                "SELECT e." + COLUMN_EXERCISE_ID +
+                        " FROM " + TABLE_EXERCISES + " e" +
+                        " WHERE e." + COLUMN_EXERCISE_NAME + " = ?" +
+                        " ORDER BY e." + COLUMN_EXERCISE_ID + " DESC LIMIT 10",
+                new String[]{exerciseName}
+        );
+
+        List<Long> exerciseIds = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            exerciseIds.add(cursor.getLong(0));
+        }
+        cursor.close();
+
+        for (long exerciseId : exerciseIds) {
+            Cursor setCursor = db.rawQuery(
+                    "SELECT " + COLUMN_REPS +
+                            " FROM " + TABLE_EXERCISE_SETS +
+                            " WHERE " + COLUMN_SET_EXERCISE_ID + " = ? AND " + COLUMN_SET_NUMBER + " = 1",
+                    new String[]{String.valueOf(exerciseId)}
+            );
+
+            if (setCursor.moveToFirst()) {
+                repsList.add(setCursor.getInt(0));
+            }
+            setCursor.close();
+        }
+
+        return repsList;
+    }
+
+
 
     public List<String> getAllUniqueExerciseNames() {
         List<String> names = new ArrayList<>();
